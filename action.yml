@@ -87,7 +87,7 @@ runs:
     - name: Cloning the repository
       run: |
         echo "::group::Cloning the repository"
-        git clone --filter=blob:none --no-checkout "${GITHUB_SERVER_URL}/${REPOSITORY}" .
+        git clone --filter=blob:none --no-checkout "https://git@github.com/${REPOSITORY}" .
         echo "::endgroup::"
       env:
         REPOSITORY: ${{ inputs.repository }}
