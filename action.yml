@@ -66,14 +66,6 @@ runs:
         echo "::endgroup::"
       shell: bash
 
-    - name: Disabling automatic garbage collection
-      run: |
-        echo "::group::Disabling automatic garbage collection"
-        git config --local gc.auto 0
-        echo "::endgroup::"
-      working-directory: ${{ inputs.path }}
-      shell: bash
-
     - name: Cloning the repository
       run: |
         echo "::group::Cloning the repository"
@@ -81,6 +73,14 @@ runs:
         echo "::endgroup::"
       env:
         REPOSITORY: ${{ inputs.repository }}
+      working-directory: ${{ inputs.path }}
+      shell: bash
+
+    - name: Disabling automatic garbage collection
+      run: |
+        echo "::group::Disabling automatic garbage collection"
+        git config --local gc.auto 0
+        echo "::endgroup::"
       working-directory: ${{ inputs.path }}
       shell: bash
 
