@@ -48,7 +48,7 @@ runs:
     - name: Setting up git credential
       uses: de-vri-es/setup-git-credentials@v2
       with:
-        credentials: https://:${{ inputs.token }}@github.com
+        credentials: https://git:${{ inputs.token }}@github.com
 
     - name: Creating the target directory
       run: |
