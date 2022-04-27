@@ -87,9 +87,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: snow-actions/sparse-checkout@main
+      - uses: lablup/sparse-checkout@main
         with:
-          repository: snow-actions/private-repository
+          repository: lablup/sparse-checkout-test-repo
           patterns: |
             dir1
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.TEST_REPO_PAT }}

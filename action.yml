@@ -45,18 +45,15 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setting git path
+    - name: Setting up git credential
       run: |
-        if [ "$RUNNER_OS" == "macOS" ]; then
-          echo "GIT=/usr/local/bin/git" >> $GITHUB_ENV
-        elif [ "$RUNNER_OS" == "Windows" ]; then
-          echo "GIT=/cmd/git" >> $GITHUB_ENV
-        else
-          echo "GIT=/usr/bin/git" >> $GITHUB_ENV
-        fi
+        echo "::add-mask::$TOKEN"
+        echo $TOKEN | gh auth login --with-token
       shell: bash
+      with:
+        TOKEN: ${{ inputs.token }}
 
-    - name: Creating directory
+    - name: Creating the target directory
       run: |
         if [ -n "$DIRECTORY" ]; then
           /bin/mkdir -p $DIRECTORY
@@ -68,17 +65,22 @@ runs:
     - name: Getting Git version info
       run: |
         echo "::group::Getting Git version info"
-        $GIT version
+        git version
         echo "::endgroup::"
       shell: bash
 
-    - name: Initializing the repository
+    - name: Disabling automatic garbage collection
       run: |
-        echo "::group::Initializing the repository"
-        $GIT init
-        $GIT remote add origin ${GITHUB_SERVER_URL/https:\/\//https:\/\/x-access-token:${TOKEN}@}/${REPOSITORY}
-        #$GIT remote add origin ${GITHUB_SERVER_URL}/${REPOSITORY}
-        $GIT remote -v
+        echo "::group::Disabling automatic garbage collection"
+        git config --local gc.auto 0
+        echo "::endgroup::"
+      working-directory: ${{ inputs.path }}
+      shell: bash
+
+    - name: Cloning the repository
+      run: |
+        echo "::group::Cloning the repository"
+        git clone --filter=blob:none --no-checkout "${GITHUB_SERVER_URL}/${REPOSITORY}" .
         echo "::endgroup::"
       env:
         REPOSITORY: ${{ inputs.repository }}
@@ -86,53 +88,14 @@ runs:
       working-directory: ${{ inputs.path }}
       shell: bash
 
-    - name: Disabling automatic garbage collection
-      run: |
-        echo "::group::Disabling automatic garbage collection"
-        $GIT config --local gc.auto 0
-        echo "::endgroup::"
-      working-directory: ${{ inputs.path }}
-      shell: bash
-
-# This doesn't work. What is wrong?
-#     - name: Setting up auth
-#       run: |
-#         echo "::group::Setting up auth"
-#         BASIC_CREDENTIAL=$(echo "x-access-token:${TOKEN}" | base64 -w0)
-#         echo "::add-mask::${BASIC_CREDENTIAL}"
-#         $GIT config --local http.${GITHUB_SERVER_URL}/.extraHeader "AUTHORIZATION: basic ${BASIC_CREDENTIAL}"
-#         echo "::endgroup::"
-#       env:
-#         TOKEN: ${{ inputs.token }}
-#       shell: bash
-
     - name: Setting up sparse checkout
       run: |
         echo "::group::Setting up sparse checkout"
-        $GIT sparse-checkout init --cone
-        $GIT sparse-checkout set $PATTERNS
+        git sparse-checkout init --cone
+        git sparse-checkout set $PATTERNS
         echo "::endgroup::"
       env:
         PATTERNS: ${{ inputs.patterns }}
-      working-directory: ${{ inputs.path }}
-      shell: bash
-
-    - name: Fetching the repository
-      run: |
-        echo "::group::Fetching the repository"
-        if [ -z "$REF" ]; then
-          if [ "$REPOSITORY" == "$GITHUB_REPOSITORY" ]; then
-            REF="${GITHUB_REF#refs/heads/}"
-          else
-            REF=$(gh api repos/$REPOSITORY --jq '.default_branch')
-          fi
-        fi
-        $GIT -c protocol.version=2 fetch --filter=blob:none --no-checkout --no-tags --prune --progress --depth=1 origin +${REF}:refs/remotes/origin/${REF}
-        echo "::endgroup::"
-      env:
-        REF: ${{ inputs.ref }}
-        REPOSITORY: ${{ inputs.repository }}
-        GH_TOKEN: ${{ inputs.token }}
       working-directory: ${{ inputs.path }}
       shell: bash
 
@@ -149,7 +112,7 @@ runs:
           fi
         fi
         echo $REF
-        $GIT checkout --force -B $REF refs/remotes/origin/$REF
+        git checkout --force -B $REF refs/remotes/origin/$REF
         echo "::endgroup::"
       env:
         REF: ${{ inputs.ref }}
@@ -159,6 +122,6 @@ runs:
       shell: bash
 
     - name: Logging commit sha
-      run: $GIT log -1 --format='%H'
+      run: git log -1 --format='%H'
       working-directory: ${{ inputs.path }}
       shell: bash
