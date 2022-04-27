@@ -16,7 +16,10 @@ jobs:
         shell: bash
 
     steps:
-      - uses: lablup/sparse-checkout@${{ github.ref }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Self-test
+        uses: ./
         with:
           repository: lablup/sparse-checkout-test-repo
           patterns: |
