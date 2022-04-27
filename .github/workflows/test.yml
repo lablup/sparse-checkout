@@ -26,3 +26,9 @@ jobs:
             dir1
           token: ${{ secrets.TEST_REPO_PAT }}
           path: ./test-repo
+      - name: Verify
+        run: |
+          ls -lR ./test-repo
+          cd ./test-repo
+          [ -f ./dir1/abc.txt ]
+          [ ! -f ./dir2/def.txt ]
