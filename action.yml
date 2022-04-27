@@ -50,7 +50,7 @@ runs:
         echo "::add-mask::$TOKEN"
         echo $TOKEN | gh auth login --with-token
       shell: bash
-      with:
+      env:
         TOKEN: ${{ inputs.token }}
 
     - name: Creating the target directory
