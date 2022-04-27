@@ -49,10 +49,12 @@ runs:
       run: |
         echo "::add-mask::$TOKEN"
         echo $TOKEN | gh auth login --with-token
+        set +e
         git config --local --name-only --get-regexp core\.sshCommand
         git submodule foreach --recursive git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :
         git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
         git submodule foreach --recursive git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :
+        set -e
         git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo X-Access-Token:$TOKEN | base64)"
       shell: bash
       env:
