@@ -48,6 +48,8 @@ runs:
     - name: Setting up git credential
       run: |
         echo "::add-mask::$TOKEN"
+        ENCODED_TOKEN=$(echo "x-access-token:$TOKEN" | base64)
+        echo "::add-mask::$ENCODED_TOKEN"
         echo $TOKEN | gh auth login --with-token
         set +e
         git config --local --name-only --get-regexp core\.sshCommand
@@ -55,7 +57,7 @@ runs:
         git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
         git submodule foreach --recursive git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :
         set -e
-        git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo X-Access-Token:$TOKEN | base64)"
+        git config --local 'http.https://github.com/.extraheader' "AUTHORIZATION: basic $ENCODED_TOKEN"
       shell: bash
       env:
         TOKEN: ${{ inputs.token }}
