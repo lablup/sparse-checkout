@@ -46,21 +46,9 @@ runs:
   using: composite
   steps:
     - name: Setting up git credential
-      run: |
-        echo "::add-mask::$TOKEN"
-        ENCODED_TOKEN=$(echo "x-access-token:$TOKEN" | base64 -w0)
-        echo "::add-mask::$ENCODED_TOKEN"
-        echo $TOKEN | gh auth login --with-token
-        set +e
-        git config --local --name-only --get-regexp core\.sshCommand
-        git submodule foreach --recursive git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :
-        git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-        git submodule foreach --recursive git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :
-        set -e
-        git config --local 'http.${GITHUB_SERVER_URL}.extraheader' "AUTHORIZATION: basic $ENCODED_TOKEN"
-      shell: bash
-      env:
-        TOKEN: ${{ inputs.token }}
+      uses: de-vri-es/setup-git-credentials@v2
+      with:
+        credentials: https://git:${{ inputs.token }}@github.com
 
     - name: Creating the target directory
       run: |
