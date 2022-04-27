@@ -25,3 +25,4 @@ jobs:
           patterns: |
             dir1
           token: ${{ secrets.TEST_REPO_PAT }}
+          path: ./test-repo
