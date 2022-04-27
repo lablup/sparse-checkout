@@ -2,10 +2,7 @@ name: Test
 
 on:
   push:
-    branches:
-      - main
   pull_request:
-  workflow_dispatch:
 
 jobs:
   test:
@@ -19,7 +16,7 @@ jobs:
         shell: bash
 
     steps:
-      - uses: lablup/sparse-checkout@main
+      - uses: lablup/sparse-checkout@${{ github.ref }}
         with:
           repository: lablup/sparse-checkout-test-repo
           patterns: |
