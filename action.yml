@@ -101,11 +101,8 @@ runs:
         echo "::group::Checking out the ref"
         if [ -z "$REF" ]; then
           if [ "$REPOSITORY" == "$GITHUB_REPOSITORY" ]; then
-            if [ -n "$GITHUB_HEAD_REF" ]; then
-              REF="${GITHUB_HEAD_REF#refs/heads/}"
-            else
-              REF="${GITHUB_REF#refs/heads/}"
-            fi
+            REF="${GITHUB_REF#refs/heads/}"
+            REF="${REF#refs/}"
           else
             # TODO: support customization of the ref in remote repos
             REF=$(gh api repos/$REPOSITORY --jq '.default_branch')
