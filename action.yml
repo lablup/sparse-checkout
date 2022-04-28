@@ -17,6 +17,7 @@ inputs:
     description: 'Repository name with owner. For example, snow-actions/sparse-checkout'
     default: ${{ github.repository }}
     required: false
+
   ref:
     description: >
       The branch, tag or SHA to checkout. When checking out the repository that
@@ -24,20 +25,20 @@ inputs:
       event.  Otherwise, uses the default branch.
     default: ''
     required: false
+
   token:
     description: >
       Personal access token (PAT) used to fetch the repository. The PAT is configured
       with the local git config, which enables your scripts to run authenticated git
       commands. The post-job step removes the PAT.
 
-
       We recommend using a service account with the least permissions necessary.
       Also when generating a new PAT, select the least scopes necessary.
-
 
       [Learn more about creating and using encrypted secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)
     default: ${{ github.token }}
     required: false
+
   path:
     description: 'Relative path under $GITHUB_WORKSPACE to place the repository'
     default: '.'
@@ -51,42 +52,28 @@ runs:
       with:
         credentials: https://git:${{ inputs.token }}@github.com
 
-    - name: Creating the target directory
+    - name: Preparing the target directory
       run: |
+        echo "::group::Preparing the target clone directory..."
         if [ -n "$DIRECTORY" ]; then
-          /bin/mkdir -p $DIRECTORY
+          mkdir -p $DIRECTORY
         fi
+        echo "::endgroup::"
       env:
         DIRECTORY: ${{ inputs.path }}
       shell: bash
 
-    - name: Getting Git version info
+    - name: Cloning the repository
       run: |
         echo "::group::Getting Git version info"
         git version
         echo "::endgroup::"
-      shell: bash
-
-    - name: Cloning the repository
-      run: |
         echo "::group::Cloning the repository"
         git clone --filter=blob:none --no-checkout "${GITHUB_SERVER_URL}/${REPOSITORY}" .
         echo "::endgroup::"
-      env:
-        REPOSITORY: ${{ inputs.repository }}
-      working-directory: ${{ inputs.path }}
-      shell: bash
-
-    - name: Disabling automatic garbage collection
-      run: |
         echo "::group::Disabling automatic garbage collection"
         git config --local gc.auto 0
         echo "::endgroup::"
-      working-directory: ${{ inputs.path }}
-      shell: bash
-
-    - name: Setting up sparse checkout
-      run: |
         echo "::group::Setting up sparse checkout"
         git sparse-checkout init --cone
         git sparse-checkout set $PATTERNS
@@ -94,17 +81,10 @@ runs:
         # map their refspec pattern to valid branch names.
         git config --local --add remote.origin.fetch '+refs/pull/*/merge:refs/remotes/origin/pr-merge/*'
         echo "::endgroup::"
-      env:
-        PATTERNS: ${{ inputs.patterns }}
-      working-directory: ${{ inputs.path }}
-      shell: bash
-
-    - name: Checking out the ref
-      run: |
         echo "::group::Checking out the ref"
         echo "repo: $REPOSITORY"
         if [ -z "$REF" ]; then
-          echo "ref: $GITHUB_REF"
+          echo "ref: $GITHUB_REF (auto)"
           if [ "$REPOSITORY" == "$GITHUB_REPOSITORY" ]; then
             # Convert refspec to branch names.
             [[ $GITHUB_REF =~ "^refs/pull/([[:digit:]]+)/merge$" ]] && BRANCH="${GITHUB_REF/${BASH_REMATCH[1]}/pr-merge/${BASH_REMATCH[2]}}" || BRANCH=$REF
@@ -114,7 +94,7 @@ runs:
             BRANCH=$(gh api repos/$REPOSITORY --jq '.default_branch')
           fi
         else
-          echo "ref: $REF"
+          echo "ref: $REF (configured)"
           [[ $REF =~ "^refs/pull/([[:digit:]]+)/merge$" ]] && BRANCH="${REF/${BASH_REMATCH[1]}/pr-merge/${BASH_REMATCH[2]}}" || BRANCH=$REF
           [[ $REF =~ "^refs/heads/(.+)$" ]] && BRANCH="${REF/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}}" || BRANCH=$REF
         fi
@@ -122,14 +102,13 @@ runs:
         git fetch  # to recognize the branch names
         git checkout --force -B "$BRANCH" "refs/remotes/origin/$BRANCH"
         echo "::endgroup::"
+        echo "::group::Logging the commit SHA"
+        git log -1 --format='%H'
+        echo "::endgroup::"
       env:
+        PATTERNS: ${{ inputs.patterns }}
         REF: ${{ inputs.ref }}
         REPOSITORY: ${{ inputs.repository }}
         GH_TOKEN: ${{ inputs.token }}
-      working-directory: ${{ inputs.path }}
-      shell: bash
-
-    - name: Logging commit sha
-      run: git log -1 --format='%H'
       working-directory: ${{ inputs.path }}
       shell: bash
