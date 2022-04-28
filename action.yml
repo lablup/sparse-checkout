@@ -88,15 +88,15 @@ runs:
           echo "ref: $GITHUB_REF (auto)"
           if [ "$REPOSITORY" == "$GITHUB_REPOSITORY" ]; then
             # Convert refspec to branch names.
-            if [ $GITHUB_REF =~ "^refs/pull/([[:digit:]]+)/merge$" ]; then
+            if [[ $GITHUB_REF =~ ^refs/pull/([[:digit:]]+)/merge$ ]]; then
               export BRANCH=${GITHUB_REF/${BASH_REMATCH[1]}/pr-merge/${BASH_REMATCH[2]}}
               echo "set BRANCH as ${GITHUB_REF/${BASH_REMATCH[1]}/pr-merge/${BASH_REMATCH[2]}}"
             fi
-            if [ $GITHUB_REF =~ "^refs/heads/(.+)$" ]; then
+            if [[ $GITHUB_REF =~ ^refs/heads/(.+)$ ]]; then
               export BRANCH=${GITHUB_REF/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}}
               echo "set BRANCH as ${GITHUB_REF/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}}"
             fi
-            if [ -z $BRANCH ]; then
+            if [[ -z $BRANCH ]]; then
               export BRANCH=$REF
               echo "set BRANCH as $REF"
             fi
