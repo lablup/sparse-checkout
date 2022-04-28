@@ -22,7 +22,7 @@ inputs:
       The branch, tag or SHA to checkout. When checking out the repository that
       triggered a workflow, this defaults to the reference or SHA for that
       event.  Otherwise, uses the default branch.
-    default: ${{ github.ref }}
+    default: ''
     required: false
   token:
     description: >
@@ -99,16 +99,20 @@ runs:
     - name: Checking out the ref
       run: |
         echo "::group::Checking out the ref"
-        echo "given ref: $REF"
         if [ -z "$REF" ]; then
           if [ "$REPOSITORY" == "$GITHUB_REPOSITORY" ]; then
-            REF="${GITHUB_REF#refs/heads/}"
-            REF="${REF#refs/}"
+            if [ -n "$GITHUB_HEAD_REF" ]; then
+              REF="${GITHUB_HEAD_REF#refs/heads/}"
+            else
+              REF="${GITHUB_REF#refs/heads/}"
+            fi
           else
+            # TODO: support customization of the ref in remote repos
             REF=$(gh api repos/$REPOSITORY --jq '.default_branch')
           fi
         fi
-        echo "converted ref: $REF"
+        echo "repo: $REPOSITORY"
+        echo "ref: $REF"
         git checkout --force -B "$REF" "refs/remotes/origin/$REF"
         echo "::endgroup::"
       env:
