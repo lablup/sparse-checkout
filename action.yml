@@ -88,27 +88,18 @@ runs:
           echo "ref: $GITHUB_REF (auto)"
           if [ "$REPOSITORY" == "$GITHUB_REPOSITORY" ]; then
             # Convert refspec to branch names.
-            if [[ $GITHUB_REF =~ ^refs/pull/([[:digit:]]+)/merge$ ]]; then
-              export BRANCH=${GITHUB_REF/${BASH_REMATCH[1]}/pr-merge/${BASH_REMATCH[2]}}
-              echo "set BRANCH as ${GITHUB_REF/${BASH_REMATCH[1]}/pr-merge/${BASH_REMATCH[2]}}"
-            fi
-            if [[ $GITHUB_REF =~ ^refs/heads/(.+)$ ]]; then
-              export BRANCH=${GITHUB_REF/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}}
-              echo "set BRANCH as ${GITHUB_REF/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}}"
-            fi
-            if [[ -z $BRANCH ]]; then
-              export BRANCH=$REF
-              echo "set BRANCH as $REF"
-            fi
+            [[ $GITHUB_REF =~ ^refs/pull/([[:digit:]]+)/merge$ ]] && BRANCH=${GITHUB_REF/${BASH_REMATCH[0]}/pr-merge/${BASH_REMATCH[1]}}
+            [[ $GITHUB_REF =~ ^refs/heads/(.+)$ ]] && BRANCH=${GITHUB_REF/${BASH_REMATCH[0]}/${BASH_REMATCH[1]}}
+            [[ -z $BRANCH ]] && BRANCH=$REF
           else
             # TODO: support customization of the ref in remote repos
             BRANCH=$(gh api repos/$REPOSITORY --jq '.default_branch')
           fi
         else
           echo "ref: $REF (configured)"
-          [[ $REF =~ "^refs/pull/([[:digit:]]+)/merge$" ]] && export BRANCH=${REF/${BASH_REMATCH[1]}/pr-merge/${BASH_REMATCH[2]}}
-          [[ $REF =~ "^refs/heads/(.+)$" ]] && export BRANCH=${REF/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}}
-          [[ -z $BRANCH ]] && export BRANCH=$REF
+          [[ $REF =~ ^refs/pull/([[:digit:]]+)/merge$ ]] && BRANCH=${REF/${BASH_REMATCH[0]}/pr-merge/${BASH_REMATCH[1]}}
+          [[ $REF =~ ^refs/heads/(.+)$ ]] && BRANCH=${REF/${BASH_REMATCH[0]}/${BASH_REMATCH[1]}}
+          [[ -z $BRANCH ]] && BRANCH=$REF
         fi
         echo "branch: $BRANCH"
         git fetch  # to recognize the branch names
