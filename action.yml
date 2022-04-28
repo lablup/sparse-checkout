@@ -99,17 +99,17 @@ runs:
     - name: Checking out the ref
       run: |
         echo "::group::Checking out the ref"
-        # FIXME: duplication with fetch
-        echo $REF
+        echo "given ref: $REF"
         if [ -z "$REF" ]; then
           if [ "$REPOSITORY" == "$GITHUB_REPOSITORY" ]; then
             REF="${GITHUB_REF#refs/heads/}"
+            REF="${REF#refs/}"
           else
             REF=$(gh api repos/$REPOSITORY --jq '.default_branch')
           fi
         fi
-        echo $REF
-        git checkout --force -B $REF refs/remotes/origin/$REF
+        echo "converted ref: $REF"
+        git checkout --force -B "$REF" "refs/remotes/origin/$REF"
         echo "::endgroup::"
       env:
         REF: ${{ inputs.ref }}
