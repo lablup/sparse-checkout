@@ -69,6 +69,7 @@ runs:
     - name: Cloning the repository
       run: |
         echo "::group::Cloning the repository"
+        # change back --filter=blob:limit=1 to --filter=blob:none after git/git#1535 is merged
         git clone --filter=blob:limit=1 --no-checkout "${GITHUB_SERVER_URL}/${REPOSITORY}" .
         echo "::endgroup::"
         echo "::group::Disabling automatic garbage collection"
