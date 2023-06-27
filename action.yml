@@ -43,7 +43,11 @@ inputs:
     description: 'Relative path under $GITHUB_WORKSPACE to place the repository'
     default: '.'
     required: false
-
+  filter:
+    description: > 
+      Use the partial clone feature and request that the server sends a subset of reachable objects according to a given object filter.
+    default: ''
+    required: false
 runs:
   using: composite
   steps:
@@ -66,14 +70,29 @@ runs:
         DIRECTORY: ${{ inputs.path }}
       shell: bash
 
-    - name: Cloning the repository
+    - name: Initializing the repository
       run: |
-        echo "::group::Cloning the repository"
-        git clone --filter=blob:none --no-checkout "${GITHUB_SERVER_URL}/${REPOSITORY}" .
+        echo "::group::Initializing the repository"
+        $GIT init
+        $GIT remote add origin ${GITHUB_SERVER_URL/https:\/\//https:\/\/x-access-token:${TOKEN}@}/${REPOSITORY}
+        $GIT remote -v
         echo "::endgroup::"
+      env:
+        REPOSITORY: ${{ inputs.repository }}
+        TOKEN: ${{ inputs.token }}
+      working-directory: ${{ inputs.path }}
+      shell: bash
+
+    - name: Disabling automatic garbage collection
+      run: |
         echo "::group::Disabling automatic garbage collection"
         git config --local gc.auto 0
         echo "::endgroup::"
+      working-directory: ${{ inputs.path }}
+      shell: bash
+
+    - name: Setting up sparse checkout
+      run: |
         echo "::group::Setting up sparse checkout"
         echo "$PATTERNS"
         git sparse-checkout init --cone
@@ -102,16 +121,20 @@ runs:
           [[ -z $BRANCH ]] && BRANCH=$REF
         fi
         echo "branch: $BRANCH"
-        git fetch  # to recognize the branch names
-        git checkout --force -B "$BRANCH" "refs/remotes/origin/$BRANCH"
+        FILTER_ARG="--no-filter"
+        if [ -n "$FILTER" ]; then
+          FILTER_ARG="--filter=$FILTER"
+        fi
+        $GIT -c protocol.version=2 fetch --no-tags --prune --progress "$FILTER_ARG" --depth=1 origin +${REF}:refs/remotes/origin/${REF}
+        $GIT checkout --force -B "$BRANCH" "refs/remotes/origin/$BRANCH"
         echo "::endgroup::"
         echo "::group::Logging the commit SHA"
-        git log -1 --format='%H'
+        $GIT log -1 --format='%H'
         echo "::endgroup::"
       env:
-        PATTERNS: ${{ inputs.patterns }}
         REF: ${{ inputs.ref }}
         REPOSITORY: ${{ inputs.repository }}
-        GH_TOKEN: ${{ inputs.token }}
+        PATTERNS: ${{ inputs.patterns }}
+        FILTER: ${{ inputs.filter }}
       working-directory: ${{ inputs.path }}
       shell: bash
