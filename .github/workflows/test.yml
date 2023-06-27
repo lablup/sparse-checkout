@@ -72,11 +72,3 @@ jobs:
           git log
           ls -la
         working-directory: repository
-
-  local-passing:
-    needs: [ local ]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - run: echo 'success'
