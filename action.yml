@@ -153,5 +153,6 @@ runs:
         REPOSITORY: ${{ inputs.repository }}
         PATTERNS: ${{ inputs.patterns }}
         FILTER: ${{ inputs.filter }}
+        GH_TOKEN: ${{ inputs.token }}
       working-directory: ${{ inputs.path }}
       shell: bash
