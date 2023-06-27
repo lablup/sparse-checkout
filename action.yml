@@ -1,8 +1,8 @@
-name: "Sparse checkout action"
-description: "Sparse checkout a git repository"
+name: 'Sparse checkout action'
+description: 'Sparse checkout a git repository'
 branding:
-  icon: "minimize-2"
-  color: "gray-dark"
+  icon: 'minimize-2'
+  color: 'gray-dark'
 inputs:
   # Sparse checkout
   patterns:
@@ -14,7 +14,7 @@ inputs:
 
   # Same as actions/checkout
   repository:
-    description: "Repository name with owner. For example, snow-actions/sparse-checkout"
+    description: 'Repository name with owner. For example, snow-actions/sparse-checkout'
     default: ${{ github.repository }}
     required: false
 
@@ -23,7 +23,7 @@ inputs:
       The branch, tag or SHA to checkout. When checking out the repository that
       triggered a workflow, this defaults to the reference or SHA for that
       event.  Otherwise, uses the default branch.
-    default: ""
+    default: ''
     required: false
 
   token:
@@ -40,8 +40,8 @@ inputs:
     required: false
 
   path:
-    description: "Relative path under $GITHUB_WORKSPACE to place the repository"
-    default: "."
+    description: 'Relative path under $GITHUB_WORKSPACE to place the repository'
+    default: '.'
     required: false
 
 runs:
