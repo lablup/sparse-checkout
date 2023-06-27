@@ -140,7 +140,7 @@ runs:
         if [ -n "$FILTER" ]; then
           FILTER_ARG="--filter=$FILTER"
         fi
-        $GIT -c protocol.version=2 fetch --no-tags --prune --progress "$FILTER_ARG" --depth=1 origin +${REF}:refs/remotes/origin/${REF}
+        $GIT -c protocol.version=2 fetch --no-tags --prune --progress "$FILTER_ARG" --depth=1 origin +${BRANCH}:refs/remotes/origin/${BRANCH}
         echo "::endgroup::"
         echo "::group::Checking out the ref"
         $GIT checkout --force -B "$BRANCH" "refs/remotes/origin/$BRANCH"
